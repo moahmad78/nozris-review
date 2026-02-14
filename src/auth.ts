@@ -4,6 +4,12 @@ import Google from "next-auth/providers/google";
 import prisma from "@/lib/prisma";
 import { authConfig } from "./auth.config";
 
+console.log("Auth Debug: Loading NextAuth...");
+console.log("Auth Debug: AUTH_GOOGLE_ID Present:", !!process.env.AUTH_GOOGLE_ID);
+console.log("Auth Debug: GOOGLE_CLIENT_ID Present:", !!process.env.GOOGLE_CLIENT_ID);
+console.log("Auth Debug: AUTH_SECRET Present:", !!process.env.AUTH_SECRET);
+console.log("Auth Debug: NEXTAUTH_URL:", process.env.NEXTAUTH_URL);
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
     ...authConfig,
     trustHost: true,
