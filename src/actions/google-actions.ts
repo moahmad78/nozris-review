@@ -7,7 +7,12 @@ import { generateReviewReply } from "@/lib/openai";
 import { revalidatePath } from "next/cache";
 
 export async function syncLocations() {
-    const session = await auth();
+    let session;
+    try {
+        session = await auth();
+    } catch (e) {
+        return { success: false, count: 0, message: "Auth failed (Server Context)" };
+    }
 
     try {
         if (!session?.user?.id) throw new Error("No user session");
@@ -69,7 +74,12 @@ export async function syncLocations() {
 }
 
 export async function syncReviews() {
-    const session = await auth();
+    let session;
+    try {
+        session = await auth();
+    } catch (e) {
+        return { success: false, count: 0, message: "Auth failed (Server Context)" };
+    }
 
     try {
         if (!session?.user?.id) throw new Error("No user session");

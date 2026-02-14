@@ -1,9 +1,5 @@
 import OpenAI from 'openai';
 
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-});
-
 interface AIResponse {
     reply: string;
     sentiment: "Positive" | "Neutral" | "Negative";
@@ -15,6 +11,15 @@ export async function generateReviewReply(
     starRating: number,
     preferredTone: string = "Professional"
 ): Promise<AIResponse | null> {
+
+    if (!process.env.OPENAI_API_KEY) {
+        console.warn("OpenAI API Key missing. Skipping AI generation.");
+        return null;
+    }
+
+    const openai = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY,
+    });
 
     const systemPrompt = `
     Identity:
