@@ -1,0 +1,146 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+
+  access_token      String?
+
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  phone         String?
+  address       String?
+  accounts      Account[]
+  sessions      Session[]
+  notifications Notification[]
+  
+  role          String      @default("CLIENT_ADMIN")
+  organizationId String?
+  organization  Organization? @relation(fields: [organizationId], references: [id])
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Organization {
+  id          String   @id @default(cuid())
+  name        String
+  preferredTone String   @default("Professional") // Professional, Friendly, Apologetic, Witty
+  autoReplyEnabled Boolean @default(false)
+  website     String?
+  
+  users       User[]
+  locations   Location[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Location {
+  id                String   @id @default(cuid())
+  googleLocationId  String   @unique // The location ID from Google Business Profile
+  name              String
+  address           String?
+  
+  organizationId    String
+  organization      Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  
+  reviews           Review[]
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model Review {
+  id              String   @id @default(cuid())
+  googleReviewId  String   @unique
+  reviewerName    String
+  starRating      Int // 1-5
+  comment         String?
+
+  reviewDate      DateTime
+  
+  status          String @default("PENDING") // PENDING, DRAFTED, POSTED
+  
+  aiDraftReply    String?
+
+  finalReply      String?
+
+  
+  language        String?  // Detected language code (en, ja, hi)
+  sentiment       String?  // Positive, Neutral, Negative
+  
+  locationId      String
+  location        Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// Role: SUPER_ADMIN, CLIENT_ADMIN
+// ReviewStatus: PENDING, DRAFT_CREATED, APPROVED, POSTED, IGNORED
+
+model AIReplyLog {
+  id              String   @id @default(cuid())
+  reviewId        String   @unique
+  customerName    String
+  originalReview  String
+  aiReply         String
+  detectedLanguage String   // e.g., "Hinglish"
+  status          String   @default("SENT") // SENT, PENDING, FAILED
+  createdAt       DateTime @default(now())
+  organizationId  String
+}
